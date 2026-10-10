@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Manage Candidates{% endblock %}
+{% block content %}
+<section class="dashboard">
+    <div class="dashboard-header">
+        <h2>Manage Candidates</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+    </div>
+
+    <h3>Add a Candidate</h3>
+    <form method="POST" action="{{ url_for('admin_candidates_add') }}" class="inline-form">
+        <div class="form-grid">
+            <div>
+                <label for="matric_no">Matric Number</label>
+                <input type="text" id="matric_no" name="matric_no" placeholder="CEAP/N-COM/2023/1002" required>
+            </div>
+            <div>
+                <label for="full_name">Full Name</label>
+                <input type="text" id="full_name" name="full_name" required>
+            </div>
+            <div>
+                <label for="position">Position Contested</label>
+                <input type="text" id="position" name="position" placeholder="e.g. President" required>
+            </div>
+            <div>
+                <label for="department">Department</label>
+                <input type="text" id="department" name="department" required>
+            </div>
+        </div>
+        <label for="manifesto">Manifesto (optional)</label>
+        <textarea id="manifesto" name="manifesto" rows="2" placeholder="Short campaign statement"></textarea>
+        <button type="submit" class="btn btn-primary">Add Candidate</button>
+    </form>
+
+    <h3 class="section-gap">Registered Candidates ({{ candidates|length }})</h3>
+    {% if candidates %}
+    <table class="admin-table">
+        <thead><tr><th>Name</th><th>Position</th><th>Department</th><th>Manifesto</th><th></th></tr></thead>
+        <tbody>
+        {% for c in candidates %}
+            <tr>
+                <td>{{ c.full_name }}</td>
+                <td>{{ c.position }}</td>
+                <td>{{ c.department }}</td>
+                <td class="muted-cell">{{ c.manifesto }}</td>
+                <td class="actions-cell">
+                    <a href="{{ url_for('admin_candidates_edit', candidate_id=c.candidate_id) }}" class="btn btn-secondary btn-sm">Edit</a>
+                    <form method="POST" action="{{ url_for('admin_candidates_delete', candidate_id=c.candidate_id) }}" onsubmit="return confirm('Remove this candidate?');">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No candidates registered yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

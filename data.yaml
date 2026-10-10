@@ -1,0 +1,77 @@
+# =============================================================================
+# data.yaml
+# CEAP E-Voting System — Voter and Candidate Upload File
+# -----------------------------------------------------------------------------
+# An electoral officer edits THIS file to register voters and candidates for
+# a new election — no Python or SQL knowledge required. Save the file, then
+# run:
+#       python load_data.py
+# to load its contents into the database (see Section 4.2.2 / Appendix C).
+#
+# Rules:
+#   - matric_no must be unique for every student.
+#   - Each candidate's "position" must exactly match across all candidates
+#     contesting the same seat (e.g. always "President", not "president").
+#   - Indentation matters in YAML: keep two spaces per level, as shown below.
+# =============================================================================
+
+election:
+  name: "2025/2026 SUG Presidential & Officer Election"
+  is_active: true
+
+students:
+  - matric_no: "CEAP/N-COM/2024/3226"
+    full_name: "Nwaobasi Mercy Chinenye"
+    email: "mercy.n@ceap.edu.ng"
+    department: "Computer Science"
+
+  - matric_no: "CEAP/N-COM/2024/3101"
+    full_name: "Chidi Okafor"
+    email: "chidi.o@ceap.edu.ng"
+    department: "Computer Science"
+
+  - matric_no: "CEAP/N-ACC/2024/2210"
+    full_name: "Blessing Eze"
+    email: "blessing.e@ceap.edu.ng"
+    department: "Accountancy"
+
+  - matric_no: "CEAP/N-MKT/2024/1187"
+    full_name: "Samuel Ibe"
+    email: "samuel.i@ceap.edu.ng"
+    department: "Marketing"
+
+  - matric_no: "CEAP/N-COM/2023/2987"
+    full_name: "Faith Amadi"
+    email: "faith.a@ceap.edu.ng"
+    department: "Computer Science"
+
+candidates:
+  - matric_no: "CEAP/N-COM/2023/1002"
+    full_name: "Emeka Johnson"
+    position: "President"
+    department: "Computer Science"
+    manifesto: "Committed to improved welfare, digital ID cards and a functioning students' clinic."
+
+  - matric_no: "CEAP/N-ACC/2023/1450"
+    full_name: "Grace Peterside"
+    position: "President"
+    department: "Accountancy"
+    manifesto: "Advocate for transparent SUG budgeting and expanded shuttle services."
+
+  - matric_no: "CEAP/N-MSC/2023/0876"
+    full_name: "David Wokoma"
+    position: "Vice President"
+    department: "Mass Communication"
+    manifesto: "Focused on sports development and inter-departmental unity."
+
+  - matric_no: "CEAP/N-COM/2023/1290"
+    full_name: "Miracle Sotonye"
+    position: "Vice President"
+    department: "Computer Science"
+    manifesto: "Champion of ICT infrastructure upgrades across campus."
+
+  - matric_no: "CEAP/N-BAN/2023/0654"
+    full_name: "Victory Nwachukwu"
+    position: "Financial Secretary"
+    department: "Banking & Finance"
+    manifesto: "Pledges monthly public financial statements for the union."

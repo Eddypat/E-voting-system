@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Manage Voters{% endblock %}
+{% block content %}
+<section class="dashboard">
+    <div class="dashboard-header">
+        <h2>Manage Voters</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+    </div>
+
+    <h3>Add a Single Voter</h3>
+    <form method="POST" action="{{ url_for('admin_voters_add') }}" class="inline-form">
+        <div class="form-grid">
+            <div>
+                <label for="matric_no">Matric Number</label>
+                <input type="text" id="matric_no" name="matric_no" placeholder="CEAP/N-COM/2024/3226" required>
+            </div>
+            <div>
+                <label for="full_name">Full Name</label>
+                <input type="text" id="full_name" name="full_name" required>
+            </div>
+            <div>
+                <label for="email">Email</label>
+                <input type="text" id="email" name="email" required>
+            </div>
+            <div>
+                <label for="department">Department</label>
+                <input type="text" id="department" name="department" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Voter</button>
+    </form>
+
+    <h3 class="section-gap">Register All Students at Once</h3>
+    <p class="muted">Paste a list below (one student per line) or upload a CSV file, in the format:
+        <code>matric_no, full_name, email, department</code>. A header row is detected automatically.</p>
+    <form method="POST" action="{{ url_for('admin_voters_bulk') }}" enctype="multipart/form-data" class="inline-form">
+        <textarea name="bulk_text" rows="6" placeholder="CEAP/N-COM/2024/3301, Tari Alabo, tari.a@ceap.edu.ng, Computer Science&#10;CEAP/N-ACC/2024/1180, Diseye Okoro, diseye.o@ceap.edu.ng, Accountancy"></textarea>
+        <label for="bulk_file" class="muted small-label">...or upload a CSV file instead:</label>
+        <input type="file" id="bulk_file" name="bulk_file" accept=".csv,.txt">
+        <button type="submit" class="btn btn-primary">Upload Voters</button>
+    </form>
+
+    <h3 class="section-gap">Registered Voters ({{ voters|length }})</h3>
+    <form method="GET" action="{{ url_for('admin_voters') }}" class="search-form">
+        <input type="text" name="q" value="{{ q }}" placeholder="Search by name, matric no., or department">
+        <button type="submit" class="btn btn-secondary btn-sm">Search</button>
+    </form>
+    {% if voters %}
+    <table class="admin-table">
+        <thead><tr><th>Matric No.</th><th>Name</th><th>Department</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        {% for v in voters %}
+            <tr>
+                <td>{{ v.matric_no }}</td>
+                <td>{{ v.full_name }}</td>
+                <td>{{ v.department }}</td>
+                <td>{% if v.has_voted %}<span class="leader-tag">Voted</span>{% else %}<span class="muted">Not yet</span>{% endif %}</td>
+                <td class="actions-cell">
+                    {% if v.has_voted %}
+                    <form method="POST" action="{{ url_for('admin_voters_reset_vote', student_id=v.student_id) }}" onsubmit="return confirm('Reset this voter\'s status so they can vote again? Any already-cast ballot is NOT removed.');">
+                        <button type="submit" class="btn btn-secondary btn-sm">Reset</button>
+                    </form>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('admin_voters_delete', student_id=v.student_id) }}" onsubmit="return confirm('Remove this voter from the register?');">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No voters match your search.</p>
+    {% endif %}
+</section>
+{% endblock %}

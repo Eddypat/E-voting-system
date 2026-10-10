@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}CEAP E-Voting System{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="brand">
+                <div class="brand-mark">CEAP</div>
+                <div class="brand-text">
+                    <strong>Captain Elechi Amadi Polytechnic</strong>
+                    <span>Student Union Government E-Voting Portal</span>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="page-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-wrap">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer">
+        <p>&copy; 2025/2026 Captain Elechi Amadi Polytechnic &mdash; E-Voting System ND Project by Nwaobasi Mercy Chinenye</p>
+    </footer>
+</body>
+</html>

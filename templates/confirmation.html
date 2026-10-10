@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Vote Recorded | CEAP E-Voting System{% endblock %}
+{% block content %}
+<section class="form-card confirmation">
+    <div class="check-mark">&#10003;</div>
+    <h2>Your Vote Has Been Recorded</h2>
+    <p class="muted">Thank you for participating in the Student Union Government election.
+        Your ballot has been securely and anonymously recorded. You may now close this window.</p>
+    <a class="btn btn-secondary" href="{{ url_for('index') }}">Return to Home</a>
+</section>
+{% endblock %}

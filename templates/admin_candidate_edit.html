@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Edit Candidate{% endblock %}
+{% block content %}
+<section class="form-card">
+    <h2>Edit Candidate</h2>
+    <form method="POST" action="{{ url_for('admin_candidates_edit', candidate_id=candidate.candidate_id) }}">
+        <label for="full_name">Full Name</label>
+        <input type="text" id="full_name" name="full_name" value="{{ candidate.full_name }}" required>
+        <label for="position">Position Contested</label>
+        <input type="text" id="position" name="position" value="{{ candidate.position }}" required>
+        <label for="department">Department</label>
+        <input type="text" id="department" name="department" value="{{ candidate.department }}" required>
+        <label for="manifesto">Manifesto</label>
+        <textarea id="manifesto" name="manifesto" rows="3">{{ candidate.manifesto }}</textarea>
+        <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+    </form>
+    <a class="link-back" href="{{ url_for('admin_candidates') }}">&larr; Back to candidates</a>
+</section>
+{% endblock %}

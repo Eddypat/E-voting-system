@@ -1,0 +1,36 @@
+# =============================================================================
+# render.yaml — Render Blueprint
+# -----------------------------------------------------------------------------
+# Deploys the CEAP E-Voting System to Render with one click:
+#   1. Push this project to a GitHub repo.
+#   2. In Render: New -> Blueprint -> select the repo. Render reads this file
+#      and creates the service automatically — no manual dashboard setup.
+#
+# Note on data persistence: Render's free web-service plan uses an ephemeral
+# filesystem, so the SQLite database (evoting.db) does NOT survive a redeploy
+# or a crash/restart. buildCommand below re-seeds it from data.yaml on every
+# deploy, which is fine for demos and pilots but NOT for a live, multi-day
+# election. For a real election, either (a) upgrade to a Render paid plan and
+# attach a persistent Disk mounted over the project directory, or (b) point
+# DB_PATH at an external managed database. See Section 5.3 of the project
+# report for this same recommendation.
+# =============================================================================
+
+services:
+  - type: web
+    name: ceap-evoting-system
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: "pip install -r requirements.txt && python load_data.py"
+    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEMO_MODE
+        value: "1"
+      - key: FLASK_DEBUG
+        value: "0"
+    healthCheckPath: /

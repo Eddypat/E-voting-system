@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<section class="dashboard">
+    <div class="dashboard-header">
+        <h2>Electoral Officer Dashboard</h2>
+        <a href="{{ url_for('admin_logout') }}" class="btn btn-secondary btn-sm">Logout</a>
+    </div>
+    <div class="stat-grid">
+        <div class="stat-card"><span class="stat-value">{{ total_voters }}</span><span class="stat-label">Registered Voters</span></div>
+        <div class="stat-card"><span class="stat-value">{{ total_voted }}</span><span class="stat-label">Votes Cast</span></div>
+        <div class="stat-card"><span class="stat-value">{{ turnout }}%</span><span class="stat-label">Voter Turnout</span></div>
+        <div class="stat-card"><span class="stat-value">{{ total_candidates }}</span><span class="stat-label">Candidates</span></div>
+    </div>
+    <div class="admin-nav">
+        <a href="{{ url_for('admin_candidates') }}" class="btn btn-secondary btn-sm">Manage Candidates</a>
+        <a href="{{ url_for('admin_voters') }}" class="btn btn-secondary btn-sm">Manage Voters</a>
+        <a href="{{ url_for('admin_results') }}" class="btn btn-secondary btn-sm">View Live Results</a>
+    </div>
+
+    <div class="dashboard-actions">
+        <form method="POST" action="{{ url_for('toggle_election') }}">
+            <button type="submit" class="btn {{ 'btn-danger' if election.is_active else 'btn-primary' }}">
+                {{ "Close Election" if election.is_active else "Open Election" }}
+            </button>
+        </form>
+    </div>
+    <div class="audit-log">
+        <h3>Recent Audit Log</h3>
+        <table>
+            <thead><tr><th>Event</th><th>Description</th><th>Timestamp</th></tr></thead>
+            <tbody>
+            {% for log in recent_logs %}
+                <tr><td>{{ log.event_type }}</td><td>{{ log.description }}</td><td>{{ log.timestamp }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

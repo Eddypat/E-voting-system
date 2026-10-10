@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Home | CEAP E-Voting System{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="hero-text">
+        <h1>{{ election.election_name if election else "Student Union Government Election" }}</h1>
+        <p>Cast your vote securely from any computer connected to the campus network. Authentication
+           is performed using your matriculation number and a one-time password (OTP).</p>
+        {% if election and election.is_active %}
+            <span class="status-pill status-active">Election is currently OPEN</span>
+        {% else %}
+            <span class="status-pill status-closed">Election is currently CLOSED</span>
+        {% endif %}
+        <div class="hero-actions">
+            <a class="btn btn-primary" href="{{ url_for('login') }}">Proceed to Vote</a>
+            <a class="btn btn-secondary" href="{{ url_for('admin_login') }}">Electoral Officer Login</a>
+        </div>
+    </div>
+    <div class="hero-panel">
+        <h3>How it works</h3>
+        <ol>
+            <li>Enter your matriculation number</li>
+            <li>Confirm the one-time password (OTP)</li>
+            <li>Select one candidate per position</li>
+            <li>Submit and receive your confirmation</li>
+        </ol>
+    </div>
+</section>
+{% endblock %}

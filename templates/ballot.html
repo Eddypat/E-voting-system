@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Cast Your Vote | CEAP E-Voting System{% endblock %}
+{% block content %}
+<section class="ballot-wrap">
+    <h2>Official Ballot</h2>
+    <p class="muted">Logged in as <strong>{{ student.full_name }}</strong> ({{ student.matric_no }}).
+        Select exactly one candidate per position, then submit your ballot.</p>
+    <form method="POST" action="{{ url_for('ballot') }}" id="ballotForm">
+        {% for position, candidates in grouped.items() %}
+        <fieldset class="position-block">
+            <legend>{{ position }}</legend>
+            <div class="candidate-grid">
+                {% for c in candidates %}
+                <label class="candidate-card">
+                    <input type="radio" name="{{ position }}" value="{{ c.candidate_id }}" required>
+                    <div class="candidate-photo-placeholder">{{ c.full_name[0] }}</div>
+                    <div class="candidate-info">
+                        <strong>{{ c.full_name }}</strong>
+                        <span>{{ c.department }}</span>
+                        <p>{{ c.manifesto }}</p>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </fieldset>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary btn-block" id="submitBallotBtn">Submit Ballot</button>
+    </form>
+</section>
+<script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Electoral Officer Login{% endblock %}
+{% block content %}
+<section class="form-card">
+    <h2>Electoral Officer / Admin Login</h2>
+    <form method="POST" action="{{ url_for('admin_login') }}">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required autofocus>
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+        <button type="submit" class="btn btn-primary btn-block">Login</button>
+    </form>
+    <p class="muted small">Demo credentials: admin / admin123</p>
+</section>
+{% endblock %}

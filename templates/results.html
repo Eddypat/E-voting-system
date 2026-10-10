@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Election Results{% endblock %}
+{% block content %}
+<section class="dashboard">
+    <div class="dashboard-header">
+        <h2>Live Election Results</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary btn-sm">&larr; Back to Dashboard</a>
+    </div>
+    {% for position, rows in results.items() %}
+    <div class="results-block">
+        <h3>{{ position }}</h3>
+        {% set max_votes = rows[0].votes if rows else 0 %}
+        {% for r in rows %}
+        <div class="result-row">
+            <div class="result-name">{{ r.full_name }} {% if r.votes == max_votes and max_votes > 0 %}<span class="leader-tag">Leading</span>{% endif %}</div>
+            <div class="result-bar-bg">
+                <div class="result-bar" style="width: {{ (r.votes / max_votes * 100) if max_votes else 0 }}%"></div>
+            </div>
+            <div class="result-count">{{ r.votes }} votes</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</section>
+{% endblock %}

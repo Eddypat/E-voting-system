@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}OTP Verification | CEAP E-Voting System{% endblock %}
+{% block content %}
+<section class="form-card">
+    <h2>OTP Verification</h2>
+    <p class="muted">Step 2 of 2 &mdash; A 6-digit one-time password has been sent to the email address
+        registered for <strong>{{ matric_no }}</strong>.</p>
+    {% if demo_otp %}
+    <div class="demo-otp-box">
+        <strong>Demo / Evaluation Mode:</strong> since this environment has no live SMTP server,
+        the OTP is shown here for testing purposes: <span class="otp-value">{{ demo_otp }}</span>
+    </div>
+    {% endif %}
+    <form method="POST" action="{{ url_for('verify_otp') }}" id="otpForm">
+        <label for="otp">One-Time Password</label>
+        <input type="text" id="otp" name="otp" maxlength="6" pattern="\d{6}" placeholder="123456" required autofocus>
+        <button type="submit" class="btn btn-primary btn-block">Verify &amp; Continue</button>
+    </form>
+    <a class="link-back" href="{{ url_for('login') }}">&larr; Back to login</a>
+</section>
+<script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+{% endblock %}

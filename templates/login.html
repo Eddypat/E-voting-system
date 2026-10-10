@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Voter Login | CEAP E-Voting System{% endblock %}
+{% block content %}
+<section class="form-card">
+    <h2>Voter Login</h2>
+    <p class="muted">Step 1 of 2 &mdash; Enter your matriculation number to receive a one-time password.</p>
+    <form method="POST" action="{{ url_for('login') }}" id="loginForm">
+        <label for="matric_no">Matriculation Number</label>
+        <input type="text" id="matric_no" name="matric_no" placeholder="e.g. CEAP/N-COM/2024/3226" required autofocus>
+        <button type="submit" class="btn btn-primary btn-block">Send OTP</button>
+    </form>
+</section>
+<script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+{% endblock %}
