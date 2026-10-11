@@ -162,6 +162,32 @@ def init_db(reset: bool = False, seed_samples: bool = True):
     conn.close()
 
 
+def sync_admin_password():
+    """Keep the 'admin' account's password equal to the ADMIN_PASSWORD
+    environment variable, every time the app starts.
+
+    Without this, the password is only set when the database is first built,
+    so changing ADMIN_PASSWORD later (e.g. in Render) would have no effect
+    until the next full rebuild. Does nothing if ADMIN_PASSWORD is not set.
+    """
+    password = os.environ.get("ADMIN_PASSWORD")
+    if not password:
+        return
+    new_hash = hash_password(password)
+    conn = get_db_connection()
+    try:
+        row = conn.execute("SELECT password_hash FROM admins WHERE username = 'admin'").fetchone()
+        if row is None:
+            conn.execute("INSERT INTO admins (username, password_hash) VALUES ('admin', ?)", (new_hash,))
+        elif row["password_hash"] != new_hash:
+            conn.execute("UPDATE admins SET password_hash = ? WHERE username = 'admin'", (new_hash,))
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass  # tables not created yet; init_db() will seed using ADMIN_PASSWORD
+    finally:
+        conn.close()
+
+
 def log_event(event_type: str, description: str = ""):
     conn = get_db_connection()
     conn.execute(

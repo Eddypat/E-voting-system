@@ -6,6 +6,6 @@ CEAP E-Voting System - deploy notes
      BREVO_API_KEY  = (API key from Brevo)
      MAIL_SENDER    = (the sender email you verified in Brevo)
      ADMIN_PASSWORD = (a strong password of your choice)
-3. Deploy. Voters now receive their OTP by email; it is never shown on screen.
+3. Deploy. Admin username is: admin
 NOTE: on Render's free plan the database resets on every redeploy.
 Keep a CSV of your voters so you can re-upload it via Manage Voters.

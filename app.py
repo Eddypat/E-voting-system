@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 
-from database import get_db_connection, init_db, log_event, hash_password
+from database import get_db_connection, init_db, log_event, hash_password, sync_admin_password
 
 app = Flask(__name__)
 # In production (e.g. on Render), set a fixed SECRET_KEY environment variable
@@ -28,6 +28,9 @@ app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(16))
 # DEMO_MODE=1 shows the OTP on screen (testing only). Set DEMO_MODE=0 in
 # production so the OTP is emailed to the voter instead.
 DEMO_MODE = os.environ.get("DEMO_MODE", "1") != "0"
+
+# Make the admin password follow the ADMIN_PASSWORD setting on every start.
+sync_admin_password()
 
 OTP_VALID_MINUTES = 10
 OTP_RESEND_COOLDOWN_SECONDS = 60
