@@ -29,8 +29,19 @@ services:
         value: 3.11.9
       - key: SECRET_KEY
         generateValue: true
+      # DEMO_MODE=0 -> OTP is emailed, never shown on screen.
       - key: DEMO_MODE
-        value: "1"
+        value: "0"
+      # Brevo (HTTPS email API - Render's free plan blocks SMTP ports).
+      # Enter these values in the Render dashboard when prompted.
+      - key: BREVO_API_KEY
+        sync: false
+      - key: MAIL_SENDER
+        sync: false
+      - key: MAIL_SENDER_NAME
+        value: "CEAP E-Voting"
+      - key: ADMIN_PASSWORD
+        sync: false
       - key: FLASK_DEBUG
         value: "0"
     healthCheckPath: /

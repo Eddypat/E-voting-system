@@ -3,8 +3,9 @@
 {% block content %}
 <section class="form-card">
     <h2>OTP Verification</h2>
-    <p class="muted">Step 2 of 2 &mdash; A 6-digit one-time password has been sent to the email address
-        registered for <strong>{{ matric_no }}</strong>.</p>
+    <p class="muted">Step 2 of 2 &mdash; A 6-digit one-time password has been sent to
+        <strong>{{ masked_email or "your registered email address" }}</strong>
+        for matric number <strong>{{ matric_no }}</strong>. It expires in 10 minutes.</p>
     {% if demo_otp %}
     <div class="demo-otp-box">
         <strong>Demo / Evaluation Mode:</strong> since this environment has no live SMTP server,

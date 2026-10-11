@@ -9,9 +9,11 @@ Author : Nwaobasi Mercy Chinenye (CEAP/N-COM/2024/3226)
 """
 
 import os
-import random
+import json
 import hashlib
 import secrets
+import urllib.request
+import urllib.error
 from datetime import datetime, timedelta
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash
@@ -23,7 +25,66 @@ app = Flask(__name__)
 # so that sessions survive a server restart instead of all being invalidated.
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(16))
 
+# DEMO_MODE=1 shows the OTP on screen (testing only). Set DEMO_MODE=0 in
+# production so the OTP is emailed to the voter instead.
 DEMO_MODE = os.environ.get("DEMO_MODE", "1") != "0"
+
+OTP_VALID_MINUTES = 10
+OTP_RESEND_COOLDOWN_SECONDS = 60
+OTP_MAX_ATTEMPTS = 5
+
+
+@app.context_processor
+def inject_flags():
+    return {"demo_mode": DEMO_MODE}
+
+
+def mask_email(email: str) -> str:
+    """j***@gmail.com - shown to the voter so they know where to look."""
+    name, _, domain = (email or "").partition("@")
+    if not domain:
+        return "your registered email address"
+    return f"{name[:1]}***@{domain}"
+
+
+def send_otp_email(to_email: str, to_name: str, otp: str):
+    """Send the OTP through Brevo's HTTPS API. Returns (ok, error_message).
+
+    An HTTPS API is used instead of SMTP because Render's free web services
+    block outbound SMTP ports (25, 465, 587). Configure with the environment
+    variables BREVO_API_KEY and MAIL_SENDER (a sender address verified in
+    Brevo); MAIL_SENDER_NAME is optional.
+    """
+    api_key = os.environ.get("BREVO_API_KEY", "")
+    sender = os.environ.get("MAIL_SENDER", "")
+    sender_name = os.environ.get("MAIL_SENDER_NAME", "CEAP E-Voting")
+    if not (api_key and sender):
+        return False, "Email service is not configured (BREVO_API_KEY / MAIL_SENDER missing)."
+
+    payload = {
+        "sender": {"name": sender_name, "email": sender},
+        "to": [{"email": to_email, "name": to_name}],
+        "subject": "Your voting OTP",
+        "htmlContent": (
+            f"<p>Hello {to_name},</p>"
+            f"<p>Your one-time password for the CEAP Student Union election is:</p>"
+            f"<p style='font-size:28px;letter-spacing:6px'><strong>{otp}</strong></p>"
+            f"<p>It expires in {OTP_VALID_MINUTES} minutes. Do not share it with anyone.</p>"
+        ),
+    }
+    req = urllib.request.Request(
+        "https://api.brevo.com/v3/smtp/email",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"api-key": api_key, "content-type": "application/json", "accept": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return (200 <= resp.status < 300), None
+    except urllib.error.HTTPError as e:
+        return False, f"Email provider rejected the request (HTTP {e.code})."
+    except Exception:
+        return False, "Could not reach the email provider."
 
 
 @app.route("/")
@@ -54,22 +115,47 @@ def login():
             log_event("DUPLICATE_LOGIN_ATTEMPT", f"Matric {matric_no} attempted repeat login")
             return redirect(url_for("login"))
 
-        otp = f"{random.randint(100000, 999999)}"
+        # Cooldown: protects voters from email-bombing and protects the
+        # email provider's daily sending quota.
+        if student["otp_expiry"]:
+            issued_at = datetime.strptime(student["otp_expiry"], "%Y-%m-%d %H:%M:%S") - timedelta(minutes=OTP_VALID_MINUTES)
+            if (datetime.now() - issued_at).total_seconds() < OTP_RESEND_COOLDOWN_SECONDS:
+                conn.close()
+                flash("An OTP was just sent. Please wait a minute before requesting another.", "error")
+                return redirect(url_for("login"))
+
+        otp = f"{secrets.randbelow(900000) + 100000}"
         otp_hash = hashlib.sha256(otp.encode()).hexdigest()
-        expiry = (datetime.now() + timedelta(minutes=10)).strftime("%Y-%m-%d %H:%M:%S")
+        expiry = (datetime.now() + timedelta(minutes=OTP_VALID_MINUTES)).strftime("%Y-%m-%d %H:%M:%S")
 
         conn.execute(
-            "UPDATE students SET otp_code = ?, otp_expiry = ? WHERE matric_no = ?",
+            "UPDATE students SET otp_code = ?, otp_expiry = ?, otp_attempts = 0 WHERE matric_no = ?",
             (otp_hash, expiry, matric_no),
         )
         conn.commit()
+
+        demo_otp = None
+        if DEMO_MODE:
+            demo_otp = otp
+        else:
+            ok, error = send_otp_email(student["email"], student["full_name"], otp)
+            if not ok:
+                # Never reveal the OTP on screen if email fails - clear it.
+                conn.execute(
+                    "UPDATE students SET otp_code = NULL, otp_expiry = NULL WHERE matric_no = ?",
+                    (matric_no,),
+                )
+                conn.commit()
+                conn.close()
+                log_event("OTP_EMAIL_FAILED", f"{matric_no}: {error}")
+                flash("We could not send your OTP email right now. Please try again shortly or contact the electoral officer.", "error")
+                return redirect(url_for("login"))
         conn.close()
 
         session["pending_matric"] = matric_no
         log_event("OTP_ISSUED", f"OTP issued to {matric_no}")
-
-        demo_otp = otp if DEMO_MODE else None
-        return render_template("otp.html", matric_no=matric_no, demo_otp=demo_otp)
+        return render_template("otp.html", matric_no=matric_no, demo_otp=demo_otp,
+                               masked_email=mask_email(student["email"]))
 
     return render_template("login.html")
 
@@ -99,13 +185,27 @@ def verify_otp():
 
     entered_hash = hashlib.sha256(entered_otp.encode()).hexdigest()
     if entered_hash != student["otp_code"]:
+        attempts = (student["otp_attempts"] or 0) + 1
+        log_event("OTP_MISMATCH", f"Wrong OTP attempt {attempts} by {matric_no}")
+        if attempts >= OTP_MAX_ATTEMPTS:
+            conn.execute(
+                "UPDATE students SET otp_code = NULL, otp_expiry = NULL, otp_attempts = 0 WHERE matric_no = ?",
+                (matric_no,),
+            )
+            conn.commit()
+            conn.close()
+            session.pop("pending_matric", None)
+            flash("Too many incorrect attempts. Please request a new OTP.", "error")
+            return redirect(url_for("login"))
+        conn.execute("UPDATE students SET otp_attempts = ? WHERE matric_no = ?", (attempts, matric_no))
+        conn.commit()
         conn.close()
-        flash("Incorrect OTP. Please try again.", "error")
-        log_event("OTP_MISMATCH", f"Wrong OTP attempt by {matric_no}")
-        return render_template("otp.html", matric_no=matric_no, demo_otp=None, error=True)
+        flash(f"Incorrect OTP. {OTP_MAX_ATTEMPTS - attempts} attempt(s) left.", "error")
+        return render_template("otp.html", matric_no=matric_no, demo_otp=None, error=True,
+                               masked_email=mask_email(student["email"]))
 
     conn.execute(
-        "UPDATE students SET otp_code = NULL, otp_expiry = NULL WHERE matric_no = ?",
+        "UPDATE students SET otp_code = NULL, otp_expiry = NULL, otp_attempts = 0 WHERE matric_no = ?",
         (matric_no,),
     )
     conn.commit()

@@ -59,7 +59,8 @@ def init_db(reset: bool = False, seed_samples: bool = True):
             department   TEXT NOT NULL,
             has_voted    INTEGER DEFAULT 0,
             otp_code     TEXT,
-            otp_expiry   TEXT
+            otp_expiry   TEXT,
+            otp_attempts INTEGER DEFAULT 0
         );
 
         CREATE TABLE IF NOT EXISTS candidates (
@@ -103,13 +104,17 @@ def init_db(reset: bool = False, seed_samples: bool = True):
         );
         """
     )
+    # Upgrade databases created before otp_attempts existed.
+    cols = [r[1] for r in cur.execute("PRAGMA table_info(students)").fetchall()]
+    if "otp_attempts" not in cols:
+        cur.execute("ALTER TABLE students ADD COLUMN otp_attempts INTEGER DEFAULT 0")
     conn.commit()
 
     cur.execute("SELECT COUNT(*) FROM admins")
     if cur.fetchone()[0] == 0:
         cur.execute(
             "INSERT INTO admins (username, password_hash) VALUES (?, ?)",
-            ("admin", hash_password("admin123")),
+            ("admin", hash_password(os.environ.get("ADMIN_PASSWORD", "admin123"))),
         )
 
     cur.execute("SELECT COUNT(*) FROM election_settings")
